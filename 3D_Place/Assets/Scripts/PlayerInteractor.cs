@@ -22,19 +22,32 @@ public class PlayerInteractor : MonoBehaviour
         nearby.ShowPrompt(false);
         nearby = null;
     }
-   public void OnInteract(InputValue value)
+    public void OnInteract(InputValue value)
     {
         if (!value.isPressed) return;
-        if (openPanel != null)             // 열려 있으면 닫기
+        if (openPanel != null)                  // 열려 있으면 닫기
         {
+            PlayExhibitSfx(nearby);             // 닫을 때 효과음 (싫으면 이 줄 빼기)
             openPanel.SetActive(false);
             openPanel = null;
             mover.canMove = true;
             return;
         }
-        if (nearby == null) return;        // 가까운 작품이 없으면 무시
+        if (nearby == null) return;             // 가까운 작품이 없으면 무시
         openPanel = nearby.panel;
         openPanel.SetActive(true);
         mover.canMove = false;
+        PlayExhibitSfx(nearby);                 // 열 때 효과음
     }
+    private void PlayExhibitSfx(Exhibit target)
+    {
+        if (target == null || target.sfxClip == null) return;
+
+        AudioSource audio = target.GetComponent<AudioSource>();
+        if (audio != null)
+        {
+            audio.PlayOneShot(target.sfxClip);
+        }
+    }
+
 }

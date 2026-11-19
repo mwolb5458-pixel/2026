@@ -1,33 +1,79 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class SceneZone : MonoBehaviour
 {
-    public GameObject prompt;   // PRESS E Í∏ÄÏûê
-    public string sceneName;    // ÎÑòÏñ¥Í∞à Ïî¨ Ïù¥Î¶Ñ
+    public GameObject prompt;       // PRESS E ±€¿⁄
+    public string sceneName;        // ≥—æÓ∞• æ¿ ¿Ã∏ß
+    public AudioClip clickSfx;      // E≈∞ ¥©∏¶ ∂ß ¿Áª˝«“ »ø∞˙¿Ω
+    public CanvasGroup fadeGroup;   // »≠∏È ¿¸»ØøÎ ∞À¿∫ ∆–≥Œ CanvasGroup
+    public float fadeDuration = 0.5f;
+
     private bool playerNear;
+    private bool isTransitioning;
 
     private void Start()
-    { GetComponent<MeshRenderer>().enabled = false; }
+    {
+        GetComponent<MeshRenderer>().enabled = false;
+        if (prompt != null) prompt.SetActive(false);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
+        if (isTransitioning) return;
         if (!other.CompareTag("Player")) return;
+
         playerNear = true;
-        prompt.SetActive(true);
+        if (prompt != null) prompt.SetActive(true);
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
+
         playerNear = false;
-        prompt.SetActive(false);
+        if (prompt != null) prompt.SetActive(false);
     }
 
     private void Update()
     {
-        if (playerNear && Keyboard.current.eKey.wasPressedThisFrame)
-            SceneManager.LoadScene(sceneName);
+        if (isTransitioning || !playerNear) return;
+
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            StartCoroutine(TransitionRoutine());
+        }
+    }
+
+    private IEnumerator TransitionRoutine()
+    {
+        isTransitioning = true;
+        if (prompt != null) prompt.SetActive(false);
+
+        AudioSource audioSource = GetComponent<AudioSource>();
+        if (audioSource != null && clickSfx != null)
+        {
+            audioSource.PlayOneShot(clickSfx);
+        }
+
+        if (fadeGroup != null)
+        {
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                fadeGroup.alpha = Mathf.Clamp01(elapsed / fadeDuration);
+                yield return null;
+            }
+            fadeGroup.alpha = 1f;
+        }
+        else
+        {
+            yield return new WaitForSeconds(fadeDuration);
+        }
+
+        SceneManager.LoadScene(sceneName);
     }
 }
