@@ -32,6 +32,7 @@ public class FirstPersonMover : MonoBehaviour
 
         Vector3 dir = transform.forward * moveInput.y
                     + transform.right * moveInput.x;
+
         cc.SimpleMove(dir * moveSpeed);
     }
 
